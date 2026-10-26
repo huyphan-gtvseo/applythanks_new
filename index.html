@@ -156,6 +156,19 @@ button{cursor:pointer}
 .sh-f{display:flex;gap:10px;align-items:center;padding:10px 16px 14px;border-top:1px solid var(--line)}
 .sh-f .cta{flex:1}
 
+/* Dòng báo thiếu hồ sơ cạnh nút ứng tuyển hàng loạt */
+.need{flex-basis:100%;font-size:12.5px;color:var(--amber-ink);background:var(--amber-50);border-radius:8px;padding:6px 10px}
+.need:empty{display:none}
+
+/* Popup hoàn thiện hồ sơ trước khi ứng tuyển hàng loạt */
+.ov{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:80;padding:16px}
+.ov.on{display:flex}
+.md{background:#fff;border-radius:16px;max-width:620px;width:100%;padding:22px;max-height:90vh;overflow:auto}
+.md h3{margin:0;font-size:19px}
+.md p{margin:4px 0 16px;color:var(--muted);font-size:14px}
+.md .fg{grid-template-columns:repeat(2,1fr)}
+.md .cta{margin-left:0}
+
 /* Toast */
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:90}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -187,7 +200,9 @@ button{cursor:pointer}
   .pc-row{flex-wrap:wrap;gap:10px 14px}
   .pc-txt{flex:1 1 calc(100% - 60px)}
   .pc-row > button{margin-left:58px !important}
-  .fg{grid-template-columns:1fr}
+  .fg,.md .fg{grid-template-columns:1fr}
+  .msticky{flex-wrap:wrap}
+  .msticky .need{order:-1;padding:5px 8px;font-size:12px}
   .f.w2{grid-column:auto}
   .f-act{flex-wrap:wrap}
   .site-f{padding-bottom:28px}
@@ -252,6 +267,7 @@ button{cursor:pointer}
               <label><input type="checkbox" id="allD"> Chọn tất cả</label>
               <button class="more" id="btnMore">Xem thêm</button>
               <button class="cta" id="ctaD"></button>
+              <div class="need" id="needD"></div>
             </div>
           </div>
         </div>
@@ -264,6 +280,7 @@ button{cursor:pointer}
     <footer class="site-f">Footer careerviet (giữ nguyên như hiện tại)</footer>
 
     <div class="msticky">
+      <div class="need" id="needM"></div>
       <label><input type="checkbox" id="allM"> Tất cả</label>
       <button class="cta" id="ctaM"></button>
     </div>
@@ -280,6 +297,7 @@ button{cursor:pointer}
 
 </div>
 
+<div class="ov" id="ov"><div class="md" id="md"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -365,6 +383,9 @@ function renderBulk(){
   ['ctaD','ctaM'].forEach(id=>{ $(id).textContent = txt; $(id).disabled = !k; });
   ['allD','allM'].forEach(id=>{ $(id).checked = all; $(id).disabled = !open.length; });
   $('jobsTitle').textContent = open.length ? `CareerViet gợi ý ${open.length} việc tương tự bạn có thể ứng tuyển ngay` : 'Bạn đã ứng tuyển tất cả việc tương tự';
+  const m = missing().length;
+  const need = open.length && m ? `⚠ Ứng tuyển hàng loạt cần hồ sơ đầy đủ · còn thiếu ${m} thông tin, bấm nút để điền nhanh` : '';
+  ['needD','needM'].forEach(id=>$(id).textContent = need);
 }
 $('lsB').addEventListener('change', e=>{
   const i = e.target.dataset.i; if(i===undefined) return;
@@ -380,7 +401,11 @@ $('lsB').addEventListener('click', e=>{
   openIds().forEach(i=>S.sel[i]=e.target.checked); renderList();
 }));
 $('btnMore').onclick = ()=>{ S.shown = JOBS.length; renderList(); };
-['ctaD','ctaM'].forEach(id=>$(id).onclick = ()=>applyJobs(selIds()));
+// Ứng tuyển hàng loạt bắt buộc hồ sơ đủ: thiếu thì mở popup hỏi đúng các trường còn thiếu
+['ctaD','ctaM'].forEach(id=>$(id).onclick = ()=>{
+  const ids = selIds();
+  if(missing().length) openModal(ids); else applyJobs(ids);
+});
 
 /* ---------- Xem trước JD (cột trái / sheet mobile) ---------- */
 function jdHTML(i){
@@ -492,6 +517,7 @@ function progressHTML(){
 }
 function renderProfile(){
   const pc = $('pc'), d = doneCount();
+  renderBulk();
   if(S.pcMode==='done'){
     pc.innerHTML = `<div class="pc-row pc-done"><div class="pc-ic">✓</div>
       <div class="pc-txt"><div class="pc-t">Hồ sơ của bạn đã sẵn sàng</div><div class="pc-s">Nhà tuyển dụng có thể tìm thấy và chủ động liên hệ bạn · ${esc(S.p.title)}</div></div>
@@ -540,7 +566,30 @@ function updateProgress(){
   const d = doneCount();
   const bar = $('barI'); if(bar) bar.style.width = d/REQ.length*100+'%';
   const s = $('pcS'); if(s) s.textContent = `Đã có ${d}/${REQ.length} thông tin bắt buộc` + (S.pcMode==='collapsed'?' · khoảng 1 phút':'');
+  renderBulk();
 }
+
+/* ---------- Popup hoàn thiện hồ sơ trước khi ứng tuyển hàng loạt ---------- */
+function openModal(ids){
+  const asked = missing();
+  const head = ()=>{ const left = missing().length; return left ? `Còn ${left} thông tin để ứng tuyển ${ids.length} việc` : `Đủ thông tin · sẵn sàng ứng tuyển ${ids.length} việc`; };
+  $('md').innerHTML = `<h3 id="mdH">${head()}</h3>
+    <p>Ứng tuyển hàng loạt cần hồ sơ đầy đủ để gửi cho nhà tuyển dụng. Điền 1 lần, lần sau ứng tuyển ngay.</p>
+    <div class="fg" id="mdF"></div>
+    <div class="f-act"><span class="warn" id="mdW"></span><button class="btn3" id="mdX">Huỷ</button><button class="cta" id="mdGo">Lưu & ứng tuyển ${ids.length} việc</button></div>`;
+  const drawF = ()=>{ $('mdF').innerHTML = asked.map(k=>field(k)).join(''); };
+  S.showErr = false; drawF();
+  bindFields($('mdF'), rerender=>{ if(rerender) drawF(); $('mdH').textContent = head(); });
+  $('mdX').onclick = closeModal;
+  $('mdGo').onclick = ()=>{
+    const left = missing();
+    if(left.length){ S.showErr = true; drawF(); $('mdW').textContent = `Còn thiếu: ${left.map(k=>LABEL[k]).join(', ')}`; return; }
+    S.showErr = false; S.pcMode = 'done'; closeModal(); renderProfile(); applyJobs(ids);
+  };
+  $('ov').classList.add('on');
+}
+function closeModal(){ $('ov').classList.remove('on'); S.showErr = false; renderProfile(); }
+$('ov').addEventListener('click', e=>{ if(e.target.id==='ov') closeModal(); });
 
 /* ---------- Chung ---------- */
 let tt;
