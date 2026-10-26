@@ -13,7 +13,6 @@
   --rose:#D0174A; --rose-700:#A81139; --rose-50:#FDECF1;
   --amber-ink:#A35400; --amber-50:#FFF4E5;
   --ink:#182642; --muted:#5D677A; --line:#E2E8F0; --bg:#F5F7FB; --white:#fff;
-  --note:#7C3AED; --note-50:#F3EEFF;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -34,22 +33,9 @@ button{cursor:pointer}
 
 .stage{display:flex;gap:20px;justify-content:center;align-items:flex-start;padding:20px 16px 40px}
 .vp{background:var(--bg);flex:1;min-width:0;max-width:1280px;box-shadow:0 4px 24px rgba(15,23,42,.12);container-type:inline-size;position:relative}
-.vp.mobile{flex:0 0 390px;max-width:390px;height:780px;overflow:auto;border:10px solid #111827;border-radius:32px;scrollbar-width:none}
+.vp.mobile{flex:0 0 390px;max-width:390px;height:clamp(520px, calc(100vh - 150px), 780px);overflow:auto;border:10px solid #111827;border-radius:32px;scrollbar-width:none}
 .vp.mobile::-webkit-scrollbar{display:none}
 
-/* Panel ghi chú */
-.notes{display:none;flex:0 0 300px;background:#fff;border-radius:12px;padding:16px;position:sticky;top:70px;box-shadow:0 4px 24px rgba(15,23,42,.08);font-size:13.5px}
-body.show-notes .notes{display:block}
-.notes h3{margin:0 0 4px;font-size:15px}
-.notes p.sub{margin:0 0 12px;color:var(--muted);font-size:12.5px}
-.notes ol{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.notes li{display:grid;grid-template-columns:22px 1fr;gap:8px}
-.notes li .n{width:22px;height:22px;border-radius:50%;background:var(--note);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
-.notes li b{display:block}
-.notes li span.why{color:var(--muted)}
-.nb{display:none;position:absolute;top:-10px;left:-10px;z-index:5;width:22px;height:22px;border-radius:50%;background:var(--note);color:#fff;font-size:12px;font-weight:700;place-items:center;box-shadow:0 0 0 3px #fff}
-body.show-notes .nb{display:grid}
-body.show-notes .noted{outline:2px dashed var(--note);outline-offset:4px}
 
 /* ===== Trang ===== */
 .site-h{background:#fff;border-bottom:1px solid var(--line);height:64px;display:flex;align-items:center;padding:0 24px;gap:28px}
@@ -125,6 +111,7 @@ body.show-notes .noted{outline:2px dashed var(--note);outline-offset:4px}
 /* Thẻ hồ sơ */
 .pc-row{display:flex;gap:16px;align-items:center}
 .pc-ic{flex:0 0 44px;height:44px;border-radius:12px;background:var(--amber-50);color:var(--amber-ink);display:grid;place-items:center;font-size:20px}
+.pc-txt{flex:1;min-width:0}
 .pc-t{font-weight:700;font-size:16.5px}
 .pc-s{color:var(--muted);font-size:13.5px;margin-top:2px}
 .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:8px;max-width:360px}
@@ -158,9 +145,7 @@ body.show-notes .noted{outline:2px dashed var(--note);outline-offset:4px}
 .f-act .warn{margin-right:auto;color:var(--rose);font-size:13px}
 .f-act .later{margin-right:auto;background:none;border:0;color:var(--muted);text-decoration:underline;font-size:13.5px;padding:0}
 
-.ghost{position:absolute;right:16px;bottom:16px;width:250px;padding:12px;border:2px dashed var(--note);border-radius:12px;background:var(--note-50);color:var(--note);font-size:12.5px;display:none}
-body.show-notes .ghost{display:block}
-.site-f{margin-top:28px;background:var(--navy);color:#94A3B8;font-size:13px;padding:28px 24px 120px;position:relative}
+.site-f{margin-top:28px;background:var(--navy);color:#94A3B8;font-size:13px;padding:28px 24px;position:relative}
 
 /* JD toàn màn hình trên mobile */
 .sheet{display:none;flex-direction:column;background:#fff;z-index:40;left:0;right:0}
@@ -171,13 +156,7 @@ body.show-notes .ghost{display:block}
 .sh-f{display:flex;gap:10px;align-items:center;padding:10px 16px 14px;border-top:1px solid var(--line)}
 .sh-f .cta{flex:1}
 
-/* Modal + toast */
-.ov{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:80;padding:16px}
-.ov.on{display:flex}
-.md{background:#fff;border-radius:16px;max-width:620px;width:100%;padding:22px;max-height:90vh;overflow:auto}
-.md h3{margin:0;font-size:19px}
-.md p{margin:4px 0 16px;color:var(--muted);font-size:14px}
-.md .fg{grid-template-columns:repeat(2,1fr)}
+/* Toast */
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:90}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
@@ -202,40 +181,35 @@ body.show-notes .ghost{display:block}
   .card.act{border-color:var(--line);box-shadow:none}
   .info{grid-template-columns:repeat(2,1fr)}
   .msticky{display:flex;position:sticky;bottom:0;z-index:20;gap:10px;align-items:center;background:#fff;padding:10px 16px 14px;border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(15,23,42,.08)}
-  .msticky label{display:flex;gap:6px;align-items:center;font-size:13px;white-space:nowrap}
+  .msticky label{flex:none;display:flex;gap:6px;align-items:center;font-size:13px;white-space:nowrap}
   .msticky input{width:18px;height:18px;accent-color:var(--brand)}
-  .msticky .cta{flex:1;padding:12px 10px;font-size:14.5px}
-  .pc-row{flex-wrap:wrap}
-  .pc-row .btn2{margin-left:60px}
-  .fg,.md .fg{grid-template-columns:1fr}
+  .msticky .cta{flex:1;min-width:0;padding:12px 10px;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pc-row{flex-wrap:wrap;gap:10px 14px}
+  .pc-txt{flex:1 1 calc(100% - 60px)}
+  .pc-row > button{margin-left:58px !important}
+  .fg{grid-template-columns:1fr}
   .f.w2{grid-column:auto}
   .f-act{flex-wrap:wrap}
-  .ghost{position:static;width:auto;margin:16px}
   .site-f{padding-bottom:28px}
 }
 @media (max-width: 760px){
-  .notes{position:static;flex-basis:100%}
   .stage{flex-direction:column;align-items:stretch}
   .vp.mobile{flex:none;align-self:center}
 }
 </style>
 </head>
-<body class="show-notes">
+<body>
 
 <div class="tools">
-  <b>Mockup · Trang «Ứng tuyển thành công» · đề xuất v2</b>
+  <b>Mockup · Trang «Ứng tuyển thành công» · đề xuất v3</b>
   <div class="grp">Thiết bị
     <div class="seg" data-ctl="dev"><button data-v="desktop" class="on">Desktop</button><button data-v="mobile">Mobile</button></div>
   </div>
   <div class="grp">Tài khoản
     <div class="seg" data-ctl="acc"><button data-v="new" class="on">Mới (thiếu hồ sơ)</button><button data-v="full">Đã có hồ sơ</button></div>
   </div>
-  <div class="grp">Ứng tuyển hàng loạt
-    <div class="seg" data-ctl="req"><button data-v="no" class="on">Không cần hồ sơ đủ</button><button data-v="yes">Cần hồ sơ đủ</button></div>
-  </div>
-  <label><input type="checkbox" id="tgNotes" checked> Ghi chú thay đổi</label>
   <button class="reset" id="btnReset">Đặt lại</button>
-  <div class="hint">Việc làm, công ty, số điện thoại trong mockup là dữ liệu giả lập. «Cần hồ sơ đủ» mô phỏng trường hợp dev xác nhận nút ứng tuyển bắt buộc hồ sơ đã lưu.</div>
+  <div class="hint">Việc làm, công ty, số điện thoại trong mockup là dữ liệu giả lập.</div>
 </div>
 
 <div class="stage">
@@ -247,8 +221,7 @@ body.show-notes .ghost{display:block}
       <button class="burger" aria-label="Menu">☰</button>
     </header>
 
-    <div class="strip noted">
-      <span class="nb" style="top:6px;left:6px">1</span>
+    <div class="strip">
       <div class="strip-in">
         <div class="ok">✓</div>
         <div>
@@ -260,8 +233,7 @@ body.show-notes .ghost{display:block}
     </div>
 
     <main class="wrap">
-      <section class="sec noted" id="secJobs">
-        <span class="nb">2</span>
+      <section class="sec" id="secJobs">
         <div class="sec-h">
           <h2 id="jobsTitle"></h2>
           <p>Cùng vị trí Hành chính – Văn phòng · tại Hồ Chí Minh · đã chọn sẵn cho bạn</p>
@@ -276,8 +248,7 @@ body.show-notes .ghost{display:block}
           </div>
           <div class="ls">
             <div class="ls-body" id="lsB"></div>
-            <div class="ls-foot noted">
-              <span class="nb">3</span>
+            <div class="ls-foot">
               <label><input type="checkbox" id="allD"> Chọn tất cả</label>
               <button class="more" id="btnMore">Xem thêm</button>
               <button class="cta" id="ctaD"></button>
@@ -286,18 +257,13 @@ body.show-notes .ghost{display:block}
         </div>
       </section>
 
-      <section class="sec noted" id="secProfile">
-        <span class="nb">4</span>
+      <section class="sec" id="secProfile">
         <div id="pc"></div>
       </section>
     </main>
-
-    <div class="ghost noted"><span class="nb">6</span><b>Popup «Allow notifications» + Zalo:</b> tắt trên trang này, chuyển sang trang khác hoặc lần truy cập sau.</div>
-
     <footer class="site-f">Footer careerviet (giữ nguyên như hiện tại)</footer>
 
-    <div class="msticky noted">
-      <span class="nb" style="left:6px;top:-12px">5</span>
+    <div class="msticky">
       <label><input type="checkbox" id="allM"> Tất cả</label>
       <button class="cta" id="ctaM"></button>
     </div>
@@ -312,22 +278,8 @@ body.show-notes .ghost{display:block}
     </div>
   </div>
 
-  <aside class="notes">
-    <h3>6 điểm thay đổi so với trang hiện tại</h3>
-    <p class="sub">Mục tiêu: user thấy và bấm được «ứng tuyển hàng loạt» ngay sau khi ứng tuyển xong. Bố cục 2 cột giữ như web hiện tại.</p>
-    <ol>
-      <li><span class="n">1</span><div><b>Banner thành dải mỏng, có tên job vừa ứng tuyển</b><span class="why">Banner cũ cao ~120px chỉ có 1 câu chúc; giờ có thêm thông tin xác nhận.</span></div></li>
-      <li><span class="n">2</span><div><b>Khối «Việc tương tự» lên ngay dưới banner, giữ 2 cột như hiện tại</b><span class="why">Trái: xem trước JD việc đang chọn, có nút «Ứng tuyển ngay» từng việc. Phải: danh sách tick sẵn, bấm vào thẻ để đổi JD bên trái. Hiện khối này bị form hồ sơ đẩy xuống dưới màn hình đầu nên user không biết nó tồn tại.</span></div></li>
-      <li><span class="n">3</span><div><b>Nút ứng tuyển hàng loạt hiện số việc đã chọn</b><span class="why">Giữ tính năng sẵn có, chỉ đổi chữ «Bỏ chọn tất cả» thành ô «Chọn tất cả» dễ hiểu hơn, và nút ghi rõ «Ứng tuyển X việc đã chọn».</span></div></li>
-      <li><span class="n">4</span><div><b>Form hồ sơ thu thành 1 thẻ có thanh tiến độ, đặt dưới khối việc làm</b><span class="why">Form cũ 11 trường (9 bắt buộc) chiếm trọn màn hình. Bấm «Hoàn thiện» mới mở form 2 bước, đã điền sẵn tiêu đề, SĐT, quốc gia, tỉnh/TP.</span></div></li>
-      <li><span class="n">5</span><div><b>Mobile: 1 cột danh sách, chạm việc để xem JD toàn màn hình, nút ứng tuyển dính đáy</b><span class="why">2 cột không vừa màn hình điện thoại. Bật chế độ Mobile ở thanh trên để xem.</span></div></li>
-      <li><span class="n">6</span><div><b>Không hiện popup thông báo đẩy trên trang này</b><span class="why">Trang hiện có 3 lời mời chồng nhau: form hồ sơ, popup «Allow», Zalo.</span></div></li>
-    </ol>
-    <p class="sub" style="margin-top:14px">Cần dev xác nhận: nút ứng tuyển (đơn lẻ và hàng loạt) có bắt buộc hồ sơ đã lưu không. Nếu có, bật «Cần hồ sơ đủ» ở thanh trên: bấm ứng tuyển sẽ mở popup chỉ hỏi các trường còn thiếu, điền xong ứng tuyển luôn.</p>
-  </aside>
 </div>
 
-<div class="ov" id="ov"><div class="md" id="md"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -368,9 +320,9 @@ function newProfile(full){
     : {title:'Office Administrator',gender:'',dob:'',phone:'0901 234 567',country:'VN',city:'Hồ Chí Minh',district:'',address:'',expMode:'yes',expYears:'',lang:'',level:''};
 }
 function init(){
-  const acc = S ? S.acc : 'new', req = S ? S.req : 'no';
+  const acc = S ? S.acc : 'new';
   closeSheet(true);
-  S = {acc, req, sel:JOBS.map(()=>true), applied:JOBS.map(()=>false), saved:JOBS.map(()=>false),
+  S = {acc, sel:JOBS.map(()=>true), applied:JOBS.map(()=>false), saved:JOBS.map(()=>false),
        shown:NUM_INIT, active:0, sheet:null,
        p:newProfile(acc==='full'), pcMode: acc==='full' ? 'done' : 'collapsed', step:1, showErr:false};
   renderAll();
@@ -491,10 +443,9 @@ function closeSheet(silent){
 $('shBack').onclick = ()=>closeSheet();
 
 /* ---------- Ứng tuyển ---------- */
-function applyJobs(ids, skipCheck){
+function applyJobs(ids){
   ids = ids.filter(i=>!S.applied[i]);
   if(!ids.length) return;
-  if(!skipCheck && S.req==='yes' && missing().length) return openModal(ids);
   ids.forEach(i=>{ S.applied[i]=true; S.sel[i]=false; });
   renderList(); renderPreview();
   toast(ids.length===1 ? `Đã ứng tuyển: ${JOBS[ids[0]].t}` : `Đã gửi hồ sơ tới ${ids.length} nhà tuyển dụng`);
@@ -543,14 +494,14 @@ function renderProfile(){
   const pc = $('pc'), d = doneCount();
   if(S.pcMode==='done'){
     pc.innerHTML = `<div class="pc-row pc-done"><div class="pc-ic">✓</div>
-      <div><div class="pc-t">Hồ sơ của bạn đã sẵn sàng</div><div class="pc-s">Nhà tuyển dụng có thể tìm thấy và chủ động liên hệ bạn · ${esc(S.p.title)}</div></div>
+      <div class="pc-txt"><div class="pc-t">Hồ sơ của bạn đã sẵn sàng</div><div class="pc-s">Nhà tuyển dụng có thể tìm thấy và chủ động liên hệ bạn · ${esc(S.p.title)}</div></div>
       <button class="btn3" style="margin-left:auto" id="pcEdit">Chỉnh sửa</button></div>`;
     $('pcEdit').onclick = ()=>{ S.pcMode='open'; S.step=1; renderProfile(); };
     return;
   }
   if(S.pcMode==='collapsed'){
     pc.innerHTML = `<div class="pc-row"><div class="pc-ic">📄</div>
-      <div style="flex:1;min-width:0"><div class="pc-t">Hoàn thiện hồ sơ để nhà tuyển dụng chủ động liên hệ bạn</div>
+      <div class="pc-txt"><div class="pc-t">Hoàn thiện hồ sơ để nhà tuyển dụng chủ động liên hệ bạn</div>
         <div class="pc-s" id="pcS">Đã có ${d}/${REQ.length} thông tin bắt buộc · khoảng 1 phút</div>${progressHTML()}</div>
       <button class="btn2" id="pcOpen">Hoàn thiện ▸</button></div>`;
     $('pcOpen').onclick = ()=>{ S.pcMode='open'; S.step=1; S.showErr=false; renderProfile(); };
@@ -558,7 +509,7 @@ function renderProfile(){
   }
   const keys = S.step===1 ? STEP1 : STEP2;
   pc.innerHTML = `<div class="pc-row"><div class="pc-ic">📄</div>
-      <div style="flex:1;min-width:0"><div class="pc-t">Hoàn thiện hồ sơ</div>
+      <div class="pc-txt"><div class="pc-t">Hoàn thiện hồ sơ</div>
       <div class="pc-s" id="pcS">Đã có ${d}/${REQ.length} thông tin bắt buộc</div>${progressHTML()}</div>
       <button class="btn3" id="pcClose">Thu gọn ▴</button></div>
     <div class="steps"><div class="st ${S.step===1?'on':'past'}">Bước 1/2 · Thông tin liên hệ</div><div class="st ${S.step===2?'on':''}">Bước 2/2 · Nghề nghiệp</div></div>
@@ -591,27 +542,6 @@ function updateProgress(){
   const s = $('pcS'); if(s) s.textContent = `Đã có ${d}/${REQ.length} thông tin bắt buộc` + (S.pcMode==='collapsed'?' · khoảng 1 phút':'');
 }
 
-/* ---------- Modal (khi ứng tuyển bắt buộc hồ sơ đủ) ---------- */
-function openModal(ids){
-  const asked = missing();
-  const head = ()=>{ const left = missing().length; return left ? `Còn ${left} thông tin để ứng tuyển ${ids.length} việc` : `Đủ thông tin · ứng tuyển ${ids.length} việc`; };
-  $('md').innerHTML = `<h3 id="mdH">${head()}</h3>
-    <p>Nhà tuyển dụng cần các thông tin này. Điền 1 lần, lần sau ứng tuyển nhanh hơn.</p>
-    <div class="fg" id="mdF"></div>
-    <div class="f-act"><button class="btn3" id="mdX">Huỷ</button><button class="cta" id="mdGo">Hoàn tất & ứng tuyển ${ids.length} việc</button></div>`;
-  const drawF = ()=>{ $('mdF').innerHTML = asked.map(k=>field(k)).join(''); };
-  S.showErr = false; drawF();
-  bindFields($('mdF'), rerender=>{ if(rerender) drawF(); $('mdH').textContent = head(); });
-  $('mdX').onclick = closeModal;
-  $('mdGo').onclick = ()=>{
-    if(missing().length){ S.showErr = true; drawF(); return; }
-    S.showErr = false; S.pcMode = 'done'; closeModal(); renderProfile(); applyJobs(ids, true);
-  };
-  $('ov').classList.add('on');
-}
-function closeModal(){ $('ov').classList.remove('on'); S.showErr=false; if(S.pcMode!=='done') renderProfile(); }
-$('ov').addEventListener('click', e=>{ if(e.target.id==='ov') closeModal(); });
-
 /* ---------- Chung ---------- */
 let tt;
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('on'),2200); }
@@ -623,9 +553,7 @@ document.querySelectorAll('.seg').forEach(seg=>seg.addEventListener('click', e=>
   const v = b.dataset.v, ctl = seg.dataset.ctl;
   if(ctl==='dev'){ closeSheet(); $('vp').classList.toggle('mobile', v==='mobile'); $('vp').scrollTop=0; renderList(); }
   if(ctl==='acc'){ S.acc = v; init(); }
-  if(ctl==='req'){ S.req = v; }
 }));
-$('tgNotes').onchange = e=>document.body.classList.toggle('show-notes', e.target.checked);
 $('btnReset').onclick = init;
 init();
 </script>
