@@ -156,6 +156,29 @@ button{cursor:pointer}
 .sh-f{display:flex;gap:10px;align-items:center;padding:10px 16px 14px;border-top:1px solid var(--line)}
 .sh-f .cta{flex:1}
 
+/* Popup ứng tuyển hàng loạt thành công */
+.ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);align-items:center;justify-content:center;z-index:80;padding:16px}
+.ov.on{display:flex}
+.md{background:#fff;border-radius:16px;max-width:480px;width:100%;padding:24px;max-height:100%;overflow:auto;text-align:center;box-shadow:0 20px 50px rgba(15,23,42,.3)}
+.md .big{width:64px;height:64px;border-radius:50%;background:#22C55E;color:#fff;font-size:32px;font-weight:700;display:grid;place-items:center;margin:0 auto 12px}
+.md h3{margin:0;font-size:21px}
+.md .sub{margin:6px 0 16px;color:var(--muted);font-size:14px}
+.md ul{list-style:none;margin:0 0 14px;padding:0;text-align:left;border:1px solid var(--line);border-radius:12px;max-height:210px;overflow:auto}
+.md li{display:flex;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px}
+.md li:last-child{border-bottom:0}
+.md li .ck{flex:0 0 20px;height:20px;border-radius:50%;background:var(--teal-50);color:var(--teal-ink);font-size:12px;font-weight:700;display:grid;place-items:center}
+.md li b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md li span.co{color:var(--muted);font-size:12.5px}
+.md .nudge{display:flex;gap:10px;align-items:center;text-align:left;background:var(--amber-50);border-radius:12px;padding:10px 12px;margin-bottom:16px;font-size:13.5px}
+.md .nudge button{margin-left:auto;background:none;border:0;color:var(--brand);font-weight:700;white-space:nowrap;padding:0}
+.md .act{display:flex;gap:10px}
+.md .act button{flex:1;margin:0}
+.ov.narrow .md{padding:20px 16px}
+.ov.narrow .md .act{flex-direction:column-reverse}
+.ov.narrow .md .nudge{flex-wrap:wrap}
+.ov.narrow .md .nudge > span:first-child{display:none}
+.ov.narrow .md .nudge button{margin-left:0}
+
 /* Toast */
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:90}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -217,7 +240,7 @@ button{cursor:pointer}
     <header class="site-h">
       <div class="logo">careerviet<small>LEADING THE HUMAN RESOURCES INDUSTRY</small></div>
       <nav class="nav"><span>Tìm Việc Làm</span><span>CVHay</span><span>VietnamSalary</span><span>CareerMap</span><span>Cẩm Nang</span></nav>
-      <div class="h-right"><span>🔔 Thông Báo Việc Làm</span><span>Chào Đắc Tâm</span></div>
+      <div class="h-right"><span>🔔 Thông Báo Việc Làm</span></div>
       <button class="burger" aria-label="Menu">☰</button>
     </header>
 
@@ -276,10 +299,12 @@ button{cursor:pointer}
         <button class="cta" id="shApply"></button>
       </div>
     </div>
+
   </div>
 
 </div>
 
+<div class="ov" id="ov"><div class="md" id="md" role="dialog" aria-modal="true"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -321,7 +346,7 @@ function newProfile(full){
 }
 function init(){
   const acc = S ? S.acc : 'new';
-  closeSheet(true);
+  closeSheet(true); closeDone();
   S = {acc, sel:JOBS.map(()=>true), applied:JOBS.map(()=>false), saved:JOBS.map(()=>false),
        shown:NUM_INIT, active:0, sheet:null,
        p:newProfile(acc==='full'), pcMode: acc==='full' ? 'done' : 'collapsed', step:1, showErr:false};
@@ -431,7 +456,8 @@ function openSheet(i){
     sh.style.position = 'absolute'; sh.style.top = vp.scrollTop+'px'; sh.style.height = vp.clientHeight+'px'; sh.style.bottom = '';
     vp.style.overflow = 'hidden';
   } else {
-    sh.style.position = 'fixed'; sh.style.top = '0'; sh.style.bottom = '0'; sh.style.height = '';
+    // Điện thoại thật: khung trang là container nên fixed bị neo theo khung → đặt absolute theo vị trí đang cuộn
+    sh.style.position = 'absolute'; sh.style.top = Math.max(0, -vp.getBoundingClientRect().top)+'px'; sh.style.height = window.innerHeight+'px'; sh.style.bottom = 'auto';
     document.body.style.overflow = 'hidden';
   }
   sh.classList.add('on'); renderPreview(); $('shB').scrollTop = 0;
@@ -449,8 +475,55 @@ function applyJobs(ids){
   if(!ids.length) return;
   ids.forEach(i=>{ S.applied[i]=true; S.sel[i]=false; });
   renderList(); renderPreview();
-  toast(ids.length===1 ? `Đã ứng tuyển: ${JOBS[ids[0]].t}` : `Đã gửi hồ sơ tới ${ids.length} nhà tuyển dụng`);
+  if(ids.length===1) toast(`Đã ứng tuyển: ${JOBS[ids[0]].t}`);
+  else openDone(ids);
 }
+
+/* ---------- Popup ứng tuyển hàng loạt thành công ---------- */
+function openDone(ids){
+  const left = openIds().length;
+  const nudge = S.pcMode!=='done'
+    ? `<div class="nudge"><span>📄</span><span>Hồ sơ đầy đủ giúp nhà tuyển dụng liên hệ bạn nhanh hơn (đã có ${doneCount()}/${REQ.length} thông tin).</span><button id="mdProfile">Hoàn thiện ▸</button></div>`
+    : '';
+  $('md').innerHTML = `<div class="big">✓</div>
+    <h3>Ứng tuyển thành công ${ids.length} việc!</h3>
+    <p class="sub">Hồ sơ của bạn đã được gửi tới ${ids.length} nhà tuyển dụng. Nhà tuyển dụng sẽ liên hệ qua email hoặc số điện thoại nếu hồ sơ phù hợp.</p>
+    <ul>${ids.map(i=>`<li><span class="ck">✓</span><div style="min-width:0"><b>${esc(JOBS[i].t)}</b><span class="co">${esc(JOBS[i].c)}</span></div></li>`).join('')}</ul>
+    ${nudge}
+    <div class="act">
+      <button class="btn3" id="mdList">Xem việc đã ứng tuyển</button>
+      <button class="btn2" id="mdClose">${left ? 'Xem thêm việc phù hợp' : 'Tìm việc khác'}</button>
+    </div>`;
+  $('mdList').onclick = closeDone;
+  $('mdClose').onclick = closeDone;
+  if($('mdProfile')) $('mdProfile').onclick = ()=>{
+    closeDone(); S.pcMode='open'; S.step=1; renderProfile();
+    const vp = $('vp'), sec = $('secProfile');
+    if(vp.classList.contains('mobile')) vp.scrollTop = sec.offsetTop - 12; else sec.scrollIntoView({behavior:'smooth', block:'start'});
+  };
+  placeOv();
+  document.body.style.overflow = 'hidden';
+  $('ov').classList.add('on');
+}
+// Popup nằm ngoài khung trang: khung Mobile → phủ đúng màn hình điện thoại; còn lại → phủ cả cửa sổ
+function placeOv(){
+  const ov = $('ov'), vp = $('vp');
+  ov.classList.toggle('narrow', narrow());
+  if(vp.classList.contains('mobile')){
+    const r = vp.getBoundingClientRect();
+    Object.assign(ov.style, {left:r.left+vp.clientLeft+'px', top:r.top+vp.clientTop+'px', width:vp.clientWidth+'px', height:vp.clientHeight+'px', right:'auto', bottom:'auto', borderRadius:'22px'});
+    vp.style.overflow = 'hidden';
+  } else {
+    Object.assign(ov.style, {left:'0', top:'0', right:'0', bottom:'0', width:'', height:'', borderRadius:''});
+  }
+}
+window.addEventListener('resize', ()=>{ if($('ov').classList.contains('on')) placeOv(); });
+function closeDone(){
+  $('ov').classList.remove('on');
+  if(!S || S.sheet===null) $('vp').style.overflow = '';
+  document.body.style.overflow = '';
+}
+$('ov').addEventListener('click', e=>{ if(e.target.id==='ov') closeDone(); });
 
 /* ---------- Trường form ---------- */
 function field(k){
@@ -552,7 +625,7 @@ document.querySelectorAll('.seg').forEach(seg=>seg.addEventListener('click', e=>
   const b = e.target.closest('button'); if(!b) return;
   seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on', x===b));
   const v = b.dataset.v, ctl = seg.dataset.ctl;
-  if(ctl==='dev'){ closeSheet(); $('vp').classList.toggle('mobile', v==='mobile'); $('vp').scrollTop=0; renderList(); }
+  if(ctl==='dev'){ closeSheet(); closeDone(); $('vp').classList.toggle('mobile', v==='mobile'); $('vp').scrollTop=0; renderList(); }
   if(ctl==='acc'){ S.acc = v; init(); }
 }));
 $('btnReset').onclick = init;
